@@ -8,6 +8,7 @@ dotenv.config();
 const EMAIL_SECRET = process.env.EMAIL_SECRET;
 const CLIENT_URL = process.env.CLIENT_URL;
 
+// đang kí user
 export const registerUser = async (req, res) => {
   try {
     const { userName, email, password } = req.body;
@@ -71,6 +72,56 @@ export const verifyEmail = async (req, res) => {
   } catch (error) {
     return res.status(400).json({
       messange: "Token không hợp lệ hoặc đã hết hạn",
+    });
+  }
+};
+
+// đăng nhập user
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        message: "Thông tin tài khoản không đúng",
+      });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message:
+          "Tài khoản chưa xác thực email. Vui lòng xác thực để đăng nhập",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(403).json({
+        messange: "Thông tin tài khoản không đúng",
+      });
+    }
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Đăng nhập thành công!",
+      token,
+      user: {
+        id: user._id,
+        userName: user.userName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Login error: ", error);
+    return res.status(500).json({
+      message: "Đã xảy ra lỗi máy chủ",
     });
   }
 };

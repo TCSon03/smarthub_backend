@@ -41,3 +41,13 @@ export const registerValidation = Joi.object({
     "any.required": "Xác nhận mật khẩu là bắt buộc.",
   }),
 });
+
+export const loginValidation = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Email không hợp lệ.",
+    "string.empty": "Email là bắt buộc.",
+  }),
+  password: Joi.string().required().messages({
+    "string.empty": "Mật khẩu là bắt buộc.",
+  }),
+});
